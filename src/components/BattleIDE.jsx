@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Interpreter } from '../engine/interpreter';
+import { getBossSprite } from './WorldOverview';
 
-export const BattleIDE = ({ level, onVictory, onFlee, autoPlay }) => {
+
+export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex }) => {
   const [code, setCode] = useState("IN\nOUT\n");
   const [gameState, setGameState] = useState({
     registers: { R1: 0, R2: 0, R3: 0, R4: 0, ACC: 0 },
@@ -14,16 +16,10 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay }) => {
     done: false
   });
   const [statusMsg, setStatusMsg] = useState('');
-  
   const interpreterRef = useRef(new Interpreter());
 
   useEffect(() => {
-    // Reset inputs when level changes
-    setGameState(prev => ({
-      ...prev,
-      inputQueue: [...level.inputs],
-      outputQueue: []
-    }));
+    setGameState(prev => ({ ...prev, inputQueue: [...level.inputs], outputQueue: [] }));
     setStatusMsg('');
     setCode("IN\nOUT\n");
     interpreterRef.current.reset();
@@ -31,17 +27,12 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay }) => {
 
   useEffect(() => {
     if (autoPlay && !statusMsg) {
-      const timer1 = setTimeout(() => {
-        handleAutoSolve();
-      }, 500);
-      const timer2 = setTimeout(() => {
+      const t1 = setTimeout(() => handleAutoSolve(), 500);
+      const t2 = setTimeout(() => {
         const btn = document.getElementById('run-btn');
         if (btn) btn.click();
       }, 1000);
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [autoPlay, statusMsg, level]);
 
@@ -58,9 +49,7 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay }) => {
     });
   };
 
-  const handleAutoSolve = () => {
-    setCode(level.solution || "IN\nOUT");
-  };
+  const handleAutoSolve = () => setCode(level.solution || "IN\nOUT");
 
   const handleRun = () => {
     const interp = interpreterRef.current;
@@ -73,122 +62,216 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay }) => {
   const handleStep = () => {
     const interp = interpreterRef.current;
     if (interp.cycleCount === 0 || interp.done || interp.error) {
-      // First step or restarting
-      if (interp.done || interp.error || interp.cycleCount === 0) {
-        interp.load(code, level.inputs);
-      }
+      interp.load(code, level.inputs);
     }
     interp.step();
     updateStateFromInterpreter(interp);
-    
-    if (interp.done) {
-      checkVictory(interp);
-    }
+    if (interp.done) checkVictory(interp);
   };
 
   const checkVictory = (interp) => {
-    if (interp.error) {
-      setStatusMsg(`Fehler: ${interp.error}`);
-      return;
-    }
-
-    // Check outputs
-    const out = interp.outputQueue;
-    const expected = level.expectedOutputs;
+    if (interp.error) { setStatusMsg(`Fehler: ${interp.error}`); return; }
+    const out = interp.outputQueue, expected = level.expectedOutputs;
     let match = out.length === expected.length;
-    if (match) {
-      for (let i = 0; i < out.length; i++) {
-        if (out[i] !== expected[i]) match = false;
-      }
-    }
-
-    if (!match) {
-      setStatusMsg(`Falsche Ausgabe. Erwartet: [${expected}], Bekommen: [${out}]`);
-      return;
-    }
-
-    if (interp.cycleCount > level.maxCycles) {
-      setStatusMsg(`Zu langsam! Zyklen: ${interp.cycleCount} / ${level.maxCycles}. Code optimieren!`);
-      return;
-    }
-
-    setStatusMsg(`Sieg! Aufgabe gelöst mit ${interp.cycleCount} Zyklen.`);
-    setTimeout(() => {
-      onVictory();
-    }, 2000);
+    if (match) for (let i = 0; i < out.length; i++) if (out[i] !== expected[i]) match = false;
+    if (!match) { setStatusMsg(`Falsche Ausgabe. Erwartet: [${expected}], Bekommen: [${out}]`); return; }
+    if (interp.cycleCount > level.maxCycles) { setStatusMsg(`Zu langsam! ${interp.cycleCount} / ${level.maxCycles} Zyklen.`); return; }
+    setStatusMsg(`Sieg! Gelöst in ${interp.cycleCount} Zyklen. ✅`);
+    setTimeout(() => onVictory(), 2000);
   };
 
+  const bossIdx = levelIndex ?? 0;
+  const bossImg = getBossSprite(bossIdx);
+
   return (
-    <div className="retro-container p-6 w-full flex flex-col items-start gap-4" style={{ maxWidth: '900px', display: 'flex', flexDirection: 'row', textAlign: 'left' }}>
-      {/* Left Panel: Description & Queues */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <h2 className="text-glow mb-2">{level.name}</h2>
-          <p className="text-gray-300 whitespace-pre-line text-sm">{level.description}</p>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 0,
+      width: '100%',
+      maxWidth: '1000px',
+    }}>
+      {/* Main content row — FIXED height so panels never shift */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '12px',
+        width: '100%',
+        height: '460px',
+        alignItems: 'stretch',
+      }}>
+
+        {/* === LEFT PANEL: Level info + queues + flee === */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          background: '#0f172a',
+          border: '2px solid #334155',
+          borderRadius: '8px',
+          padding: '14px',
+          overflow: 'hidden',
+          minWidth: 0,
+        }}>
+          {/* Boss sprite */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img
+              src={bossImg}
+              alt="boss"
+              style={{
+                width: '72px', height: '72px',
+                objectFit: 'contain',
+                imageRendering: 'pixelated',
+                filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.7))',
+                animation: 'bounce-boss 1.2s infinite',
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <h2 className="text-glow" style={{ margin: 0, fontSize: '1.1rem' }}>{level.name}</h2>
+            </div>
+          </div>
+
+          <p style={{ color: '#cbd5e1', whiteSpace: 'pre-line', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
+            {level.description}
+          </p>
+
+          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '10px' }}>
+            <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '6px', color: '#94a3b8' }}>
+              Eingabe-Queue ({gameState.inputQueue.length})
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {gameState.inputQueue.map((v, i) => (
+                <span key={i} style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '13px' }}>{v}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Output — fixed min-height so adding items doesn't shift layout */}
+          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '10px', flexShrink: 0 }}>
+            <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', color: '#94a3b8' }}>Ausgabe / Ziel</div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>Erwartet: {level.expectedOutputs.join(' ')}</div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', minHeight: '26px', alignContent: 'flex-start' }}>
+              {gameState.outputQueue.map((v, i) => (
+                <span key={i} className="text-glow" style={{ background: '#1e3a5f', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '13px' }}>{v}</span>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b', padding: '8px 16px' }}>
+            Fliehen (Zurück)
+          </button>
         </div>
-        
-        <div className="register-box">
-          <div className="font-bold mb-1">Eingabe-Queue ({gameState.inputQueue.length})</div>
-          <div className="flex gap-2 flex-wrap text-sm">
-            {gameState.inputQueue.map((v, i) => <span key={i} className="bg-slate-700 p-1 rounded mono">{v}</span>)}
+
+        {/* === MIDDLE PANEL: Code Editor — fills height, textarea is flex:1 === */}
+        <div style={{
+          flex: 1.5,
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#0f172a',
+          border: '2px solid #334155',
+          borderRadius: '8px',
+          padding: '14px',
+          minWidth: 0,
+          overflow: 'hidden',
+        }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Code Editor</h3>
+          <textarea
+            className="code-editor mono"
+            style={{
+              flex: 1,
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: '14px',
+              color: '#4ade80',
+              background: '#0a0f1a',
+              border: '1px solid #334155',
+              borderRadius: '6px',
+              padding: '12px',
+              resize: 'none',
+              lineHeight: 1.6,
+              overflow: 'auto',
+            }}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            spellCheck={false}
+          />
+
+          {/* Status message — always rendered to pre-reserve space, never causes layout shift */}
+          <div style={{
+              marginTop: '10px',
+              minHeight: '44px',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              boxSizing: 'border-box',
+              visibility: statusMsg ? 'visible' : 'hidden',
+              background: statusMsg.startsWith('Sieg') ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+              border: `1px solid ${statusMsg.startsWith('Sieg') ? '#10b981' : '#ef4444'}`,
+              color: statusMsg.startsWith('Sieg') ? '#34d399' : '#f87171',
+            }}>
+              {statusMsg}
+            </div>
+        </div>
+
+        {/* === RIGHT PANEL: CPU State — flexShrink:0 === */}
+        <div style={{
+          flex: 0.75,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          background: '#0f172a',
+          border: '2px solid #334155',
+          borderRadius: '8px',
+          padding: '14px',
+          overflow: 'hidden',
+        }}>
+          <h3 style={{ margin: 0, fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CPU State</h3>
+          <div style={{ background: '#1e293b', borderRadius: '6px', padding: '10px', fontFamily: 'monospace', fontSize: '13px' }}>
+            <div>ACC: <span className="text-glow">{gameState.registers.ACC}</span></div>
+            <div>R1: {gameState.registers.R1}</div>
+            <div>R2: {gameState.registers.R2}</div>
+            <div>R3: {gameState.registers.R3}</div>
+            <div>R4: {gameState.registers.R4}</div>
+          </div>
+          <div style={{ background: '#1e293b', borderRadius: '6px', padding: '10px', fontFamily: 'monospace', fontSize: '12px' }}>
+            <div>EQ: {gameState.flags.EQUAL ? '1' : '0'}</div>
+            <div>GT: {gameState.flags.GREATER ? '1' : '0'}</div>
+            <div>LT: {gameState.flags.LESS ? '1' : '0'}</div>
+          </div>
+          <div style={{ background: '#1e293b', borderRadius: '6px', padding: '10px', fontFamily: 'monospace', fontSize: '12px' }}>
+            <div>PC: {gameState.pc + 1}</div>
+            <div>Zyklen: {gameState.cycleCount}/{level.maxCycles}</div>
           </div>
         </div>
-        
-        <div className="register-box">
-          <div className="font-bold mb-1">Ausgabe-Queue / Ziel</div>
-          <p className="text-xs mb-1 text-gray-400">Erwartet: {level.expectedOutputs.join(' ')}</p>
-          <div className="flex gap-2 flex-wrap text-sm border-t border-slate-600 pt-1 mt-1">
-            {gameState.outputQueue.map((v, i) => <span key={i} className="bg-blue-900 p-1 rounded mono text-glow">{v}</span>)}
-          </div>
-        </div>
-        
-        <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b' }}>Fliehen (Zurück)</button>
       </div>
 
-      {/* Middle Panel: Editor */}
-      <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column' }}>
-        <h3 className="mb-2">Code Editor</h3>
-        <textarea 
-          className="code-editor mono text-sm" 
-          style={{ flex: 1, minHeight: '300px' }}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          spellCheck={false}
-        />
-        <div className="flex gap-2 mt-2" style={{ display: 'flex', gap: '8px' }}>
-          <button id="run-btn" onClick={handleRun} style={{ background: '#166534' }}>Run</button>
-          <button onClick={handleStep} style={{ background: '#ca8a04' }}>Step</button>
-          <button onClick={handleAutoSolve} style={{ background: '#6366f1', marginLeft: 'auto' }}>Auto-Solve (Dev)</button>
-        </div>
-        {statusMsg && (
-          <div className={`mt-2 p-2 rounded text-sm font-bold ${statusMsg.startsWith('Sieg') ? 'text-glow-success' : 'text-glow-error'}`}>
-            {statusMsg}
-          </div>
-        )}
+      {/* === BUTTONS PANEL (separate row below) === */}
+      <div style={{
+        display: 'flex',
+        gap: '10px',
+        marginTop: '12px',
+        padding: '14px 20px',
+        background: '#0f172a',
+        border: '2px solid #334155',
+        borderRadius: '8px',
+        width: '100%',
+        boxSizing: 'border-box',
+        alignItems: 'center',
+      }}>
+        <button id="run-btn" onClick={handleRun} style={{ background: '#166534', padding: '8px 20px' }}>▶ Run</button>
+        <button onClick={handleStep} style={{ background: '#854d0e', padding: '8px 20px' }}>⏭ Step</button>
+        <button onClick={handleAutoSolve} style={{ background: '#4338ca', padding: '8px 20px', marginLeft: 'auto' }}>🤖 Auto-Solve</button>
       </div>
 
-      {/* Right Panel: CPU State */}
-      <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <h3>CPU State</h3>
-        <div className="register-box mono">
-          <div>ACC: <span className="text-glow">{gameState.registers.ACC}</span></div>
-          <div>R1: {gameState.registers.R1}</div>
-          <div>R2: {gameState.registers.R2}</div>
-          <div>R3: {gameState.registers.R3}</div>
-          <div>R4: {gameState.registers.R4}</div>
-        </div>
-        
-        <div className="register-box mono text-sm">
-          <div>EQUAL: {gameState.flags.EQUAL ? '1' : '0'}</div>
-          <div>GREAT: {gameState.flags.GREATER ? '1' : '0'}</div>
-          <div>LESS: {gameState.flags.LESS ? '1' : '0'}</div>
-        </div>
-
-        <div className="register-box mono text-sm">
-          <div>PC: {gameState.pc + 1}</div>
-          <div>Zyklen: {gameState.cycleCount}/{level.maxCycles}</div>
-        </div>
-      </div>
+      <style>{`
+        @keyframes bounce-boss {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+      `}</style>
     </div>
   );
 };

@@ -63,7 +63,7 @@ export const levels = [
     maxCycles: 100,
     maxInstructions: 15,
     mapProps: { type: 'enemy', x: 50, y: 20 },
-    solution: "IN\nCMP 0\nJEQ 6\nMOV ACC, 0\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1"
+    solution: "IN\nCMP 0\nJEQ 7\nMOV ACC, 0\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1"
   },
   {
     id: 7,
@@ -96,7 +96,7 @@ export const levels = [
     maxCycles: 150,
     maxInstructions: 20,
     mapProps: { type: 'enemy', x: 30, y: 50 },
-    solution: "IN\nMOV R1, ACC\nIN\nCMP R1\nJGT 8\nMOV ACC, R1\nOUT\nJMP 1\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nIN\nCMP R1\nJGT 9\nMOV ACC, R1\nOUT\nJMP 1\nOUT\nJMP 1"
   },
   {
     id: 10,
@@ -107,7 +107,7 @@ export const levels = [
     maxCycles: 150,
     maxInstructions: 20,
     mapProps: { type: 'enemy', x: 20, y: 50 },
-    solution: "IN\nMOV R1, ACC\nIN\nCMP R1\nJLT 8\nMOV ACC, R1\nOUT\nJMP 1\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nIN\nCMP R1\nJLT 9\nMOV ACC, R1\nOUT\nJMP 1\nOUT\nJMP 1"
   },
   {
     id: 11,
@@ -129,7 +129,7 @@ export const levels = [
     maxCycles: 150,
     maxInstructions: 20,
     mapProps: { type: 'enemy', x: 10, y: 30 },
-    solution: "IN\nCMP 0\nJEQ 12\nJGT 9\nMOV ACC, -1\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1\nMOV ACC, 0\nOUT\nJMP 1"
+    solution: "IN\nCMP 0\nJEQ 11\nJGT 8\nMOV ACC, -1\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1\nMOV ACC, 0\nOUT\nJMP 1"
   },
   {
     id: 13,
@@ -195,7 +195,7 @@ export const levels = [
     maxCycles: 300,
     maxInstructions: 15,
     mapProps: { type: 'enemy', x: 60, y: 45 },
-    solution: "MOV R1, 0\nIN\nCMP 0\nJEQ 8\nMOV ACC, R1\nADD 1\nMOV R1, ACC\nJMP 2\nMOV ACC, R1\nOUT\nMOV R1, 0\nJMP 2"
+    solution: "MOV R1, 0\nIN\nCMP 0\nJEQ 9\nMOV ACC, R1\nADD 1\nMOV R1, ACC\nJMP 2\nMOV ACC, R1\nOUT\nMOV R1, 0\nJMP 2"
   },
   {
     id: 19,
@@ -217,7 +217,7 @@ export const levels = [
     maxCycles: 200,
     maxInstructions: 20,
     mapProps: { type: 'enemy', x: 80, y: 55 },
-    solution: "IN\nMOV R1, ACC\nIN\nMOV R2, ACC\nCMP R1\nJLT 11\nMOV ACC, R1\nOUT\nMOV ACC, R2\nOUT\nJMP 1\nMOV ACC, R2\nOUT\nMOV ACC, R1\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nIN\nMOV R2, ACC\nCMP R1\nJLT 12\nMOV ACC, R1\nOUT\nMOV ACC, R2\nOUT\nJMP 1\nMOV ACC, R2\nOUT\nMOV ACC, R1\nOUT\nJMP 1"
   },
   {
     id: 21,
@@ -239,7 +239,7 @@ export const levels = [
     maxCycles: 150,
     maxInstructions: 15,
     mapProps: { type: 'enemy', x: 85, y: 35 },
-    solution: "IN\nCMP 5\nJEQ 6\nMOV ACC, 0\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1"
+    solution: "IN\nCMP 5\nJEQ 7\nMOV ACC, 0\nOUT\nJMP 1\nMOV ACC, 1\nOUT\nJMP 1"
   },
   {
     id: 23,
@@ -272,7 +272,7 @@ export const levels = [
     maxCycles: 500,
     maxInstructions: 25,
     mapProps: { type: 'enemy', x: 65, y: 15 },
-    solution: "IN\nMOV R1, ACC\nMOV R2, 2\nCMP 1\nJEQ 12\nMOV ACC, R2\nADD R2\nMOV R2, ACC\nMOV ACC, R1\nSUB 1\nMOV R1, ACC\nJMP 4\nMOV ACC, R2\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nMOV R2, 2\nCMP 1\nJEQ 13\nMOV ACC, R2\nADD R2\nMOV R2, ACC\nMOV ACC, R1\nSUB 1\nMOV R1, ACC\nJMP 4\nMOV ACC, R2\nOUT\nJMP 1"
   },
   {
     id: 26,
@@ -283,7 +283,7 @@ export const levels = [
     maxCycles: 600,
     maxInstructions: 25,
     mapProps: { type: 'enemy', x: 55, y: 5 },
-    solution: "IN\nMOV R1, ACC\nIN\nMOV R2, ACC\nMOV R3, 0\nMOV ACC, R2\nCMP 0\nJEQ 15\nMOV ACC, R3\nADD R1\nMOV R3, ACC\nMOV ACC, R2\nSUB 1\nMOV R2, ACC\nJMP 6\nMOV ACC, R3\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nIN\nMOV R2, ACC\nMOV R3, 0\nMOV ACC, R2\nCMP 0\nJEQ 16\nMOV ACC, R3\nADD R1\nMOV R3, ACC\nMOV ACC, R2\nSUB 1\nMOV R2, ACC\nJMP 6\nMOV ACC, R3\nOUT\nJMP 1"
   },
   {
     id: 27,
@@ -305,7 +305,7 @@ export const levels = [
     maxCycles: 400,
     maxInstructions: 20,
     mapProps: { type: 'enemy', x: 35, y: 5 },
-    solution: "IN\nMOV R1, ACC\nIN\nADD R1\nMOV R1, 0\nCMP 2\nJLT 12\nSUB 2\nMOV R2, ACC\nMOV ACC, R1\nADD 1\nMOV R1, ACC\nMOV ACC, R2\nJMP 6\nMOV ACC, R1\nOUT\nJMP 1"
+    solution: "IN\nMOV R1, ACC\nIN\nADD R1\nMOV R1, 0\nCMP 2\nJLT 15\nSUB 2\nMOV R2, ACC\nMOV ACC, R1\nADD 1\nMOV R1, ACC\nMOV ACC, R2\nJMP 6\nMOV ACC, R1\nOUT\nJMP 1"
   },
   {
     id: 29,

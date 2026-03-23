@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import { generateWorld } from '../engine/worldgen';
 import { getBossSprite } from './WorldOverview';
 
@@ -55,7 +55,6 @@ import imgWeg_sw from '../assets/weg_sw.jpg';
 import imgWeg_swo from '../assets/weg_swo.jpg';
 import imgWeg_wo from '../assets/weg_wo.jpg';
 
-// ─── Hero Sprites ─────────────────────────────────────────────────────────────
 import imgHero from '../assets/hero.png';
 import imgHero_n from '../assets/hero_n.png';
 import imgHero_s from '../assets/hero_s.png';
@@ -64,7 +63,6 @@ import imgHero_o from '../assets/hero_o.png';
 
 const HERO_SPRITES = { idle: imgHero, n: imgHero_n, s: imgHero_s, w: imgHero_w, o: imgHero_o };
 
-// ─── Tile Lookup ──────────────────────────────────────────────────────────────
 const TILE_MAP = {
   grass: imgGrass, see: imgSee,
   berg: imgBerg, berg_n: imgBerg_n, berg_no: imgBerg_no, berg_ns: imgBerg_ns,
@@ -83,13 +81,14 @@ const TILE_MAP = {
   weg_so: imgWeg_so, weg_sw: imgWeg_sw, weg_swo: imgWeg_swo, weg_wo: imgWeg_wo,
 };
 
-const VIEW_COLS = 25;
-const VIEW_ROWS = 17;
-const TILE_SIZE = 32;
+// ─── Constants ────────────────────────────────────────────────────────────────
+// 12 wide × 8 tall tiles at 64px — retro chunky look
+const VIEW_COLS = 12;
+const VIEW_ROWS = 8;
+const TILE_SIZE = 64;
 const MAP_WIDTH = 100;
 const MAP_HEIGHT = 100;
 
-// Blocked tiles — forest AND mountain AND meer AND fluss AND see block movement
 const BLOCKED_TILES = new Set(['meer', 'mountain', 'fluss', 'see', 'forest']);
 
 const getTileAt = (grid, x, y) => {
@@ -129,65 +128,36 @@ const getTileImage = (grid, x, y, type) => {
   return TILE_MAP[best] || TILE_MAP['grass'];
 };
 
-// ─── BFS Pathfinding ──────────────────────────────────────────────────────────
-// Returns the next step {x,y} to move from (sx,sy) toward (tx,ty) avoiding blocked tiles.
-// Returns null if no path found (target unreachable).
+// BFS pathfinding for auto-play
 const bfsNextStep = (grid, sx, sy, tx, ty) => {
   if (sx === tx && sy === ty) return null;
-
   const key = (x, y) => y * MAP_WIDTH + x;
-  const visited = new Set();
+  const visited = new Set([key(sx, sy)]);
   const queue = [{ x: sx, y: sy, path: [] }];
-  visited.add(key(sx, sy));
-
-  const dirs = [
-    { dx: 0, dy: -1, dir: 'n' },
-    { dx: 0, dy:  1, dir: 's' },
-    { dx: -1, dy: 0, dir: 'w' },
-    { dx:  1, dy: 0, dir: 'o' },
-  ];
-
-  while (queue.length > 0) {
+  const dirs = [{ dx: 0, dy: -1, dir: 'n' }, { dx: 0, dy: 1, dir: 's' }, { dx: -1, dy: 0, dir: 'w' }, { dx: 1, dy: 0, dir: 'o' }];
+  while (queue.length) {
     const { x, y, path } = queue.shift();
-
     for (const { dx, dy, dir } of dirs) {
-      const nx = x + dx;
-      const ny = y + dy;
+      const nx = x + dx, ny = y + dy;
       if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
       if (visited.has(key(nx, ny))) continue;
-
-      const t = grid[ny][nx];
-      // Allow movement to the target even if it's blocked-type (can stand adjacent to boss tile)
       const isTarget = nx === tx && ny === ty;
-      if (!isTarget && BLOCKED_TILES.has(t)) continue;
-
+      if (!isTarget && BLOCKED_TILES.has(grid[ny]?.[nx])) continue;
       const newPath = [...path, { x: nx, y: ny, dir }];
-      if (isTarget) {
-        // Return first step of the path
-        return newPath.length > 0 ? newPath[0] : null;
-      }
-
+      if (isTarget) return newPath[0] || null;
       visited.add(key(nx, ny));
       queue.push({ x: nx, y: ny, path: newPath });
     }
   }
-  return null; // No path found
+  return null;
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-// playerPos and onPlayerMove are controlled from App.jsx so position persists across battles
+// ─── Component ────────────────────────────────────────────────────────────────
 export const Overworld = ({
-  levels,
-  currentLevelIndex,
-  onEncounter,
-  autoPlay,
-  onShowWorldMap,
-  playerPos,
-  onPlayerMove,
+  levels, currentLevelIndex, onEncounter, autoPlay,
+  onShowWorldMap, playerPos, onPlayerMove,
 }) => {
-  // heroDir is local — purely visual, doesn't need to survive battle
-  const [heroDir, setHeroDir] = React.useState('idle');
-
+  const [heroDir, setHeroDir] = useState('idle');
   const currentLevel = levels[currentLevelIndex];
   const { grid: mapGrid } = useMemo(() => generateWorld(), []);
 
@@ -203,13 +173,16 @@ export const Overworld = ({
     if (nextX < 0 || nextX >= MAP_WIDTH || nextY < 0 || nextY >= MAP_HEIGHT) return;
     if (BLOCKED_TILES.has(getTileAt(mapGrid, nextX, nextY))) return;
     setHeroDir(dir);
+    const posBeforeMove = { ...playerPos };
     onPlayerMove({ x: nextX, y: nextY });
-    if (currentLevel && nextX === currentLevel.mapProps.x && nextY === currentLevel.mapProps.y) {
-      onEncounter(currentLevel);
+    // Trigger encounter for ANY undefeated boss the player steps on
+    const stepKey = `${nextX},${nextY}`;
+    const bossIdx = enemyMap[stepKey];
+    if (bossIdx !== undefined && bossIdx >= currentLevelIndex) {
+      onEncounter(levels[bossIdx], posBeforeMove, bossIdx);
     }
-  }, [playerPos, mapGrid, currentLevel, onEncounter, onPlayerMove]);
+  }, [playerPos, mapGrid, currentLevelIndex, levels, enemyMap, onEncounter, onPlayerMove]);
 
-  // ── Keyboard movement ──
   useEffect(() => {
     const h = (e) => {
       if (e.key === 'ArrowUp'    || e.key === 'w') { e.preventDefault(); tryMove(0, -1, 'n'); }
@@ -222,38 +195,23 @@ export const Overworld = ({
     return () => window.removeEventListener('keydown', h);
   }, [tryMove, onShowWorldMap]);
 
-  // ── Auto-play with BFS pathfinding ──
   useEffect(() => {
     if (!autoPlay || !currentLevel) return;
-
     const interval = setInterval(() => {
-      const tx = currentLevel.mapProps.x;
-      const ty = currentLevel.mapProps.y;
-
-      // Check if we're already at the enemy
+      const tx = currentLevel.mapProps.x, ty = currentLevel.mapProps.y;
       if (playerPos.x === tx && playerPos.y === ty) {
-        onEncounter(currentLevel);
+        onEncounter(currentLevel, playerPos, currentLevelIndex);
         return;
       }
-
-      // BFS to find next step toward enemy
       const next = bfsNextStep(mapGrid, playerPos.x, playerPos.y, tx, ty);
-      if (!next) {
-        // No path found — try to walk adjacent to the target instead
-        return;
-      }
-
+      if (!next) return;
       setHeroDir(next.dir);
+      const posBeforeMove = { ...playerPos };
       onPlayerMove({ x: next.x, y: next.y });
-
-      // Check encounter after move
-      if (next.x === tx && next.y === ty) {
-        onEncounter(currentLevel);
-      }
-    }, 80); // Slightly faster for smoother auto-play
-
+      if (next.x === tx && next.y === ty) onEncounter(currentLevel, posBeforeMove, currentLevelIndex);
+    }, 80);
     return () => clearInterval(interval);
-  }, [autoPlay, currentLevel, playerPos, mapGrid, onEncounter, onPlayerMove]);
+  }, [autoPlay, currentLevel, currentLevelIndex, playerPos, mapGrid, onEncounter, onPlayerMove]);
 
   const renderViewport = () => {
     const cells = [];
@@ -262,8 +220,7 @@ export const Overworld = ({
 
     for (let row = 0; row < VIEW_ROWS; row++) {
       for (let col = 0; col < VIEW_COLS; col++) {
-        const wx = camX + col;
-        const wy = camY + row;
+        const wx = camX + col, wy = camY + row;
         const cellType = getTileAt(mapGrid, wx, wy);
         const tileImg = getTileImage(mapGrid, wx, wy, cellType);
         const isPlayer = wx === playerPos.x && wy === playerPos.y;
@@ -281,41 +238,29 @@ export const Overworld = ({
               width: `${TILE_SIZE}px`, height: `${TILE_SIZE}px`,
               objectFit: 'cover', display: 'block', imageRendering: 'pixelated',
             }} />
-
             {isEnemy && !isDefeated && (
-              <img
-                src={getBossSprite(enemyIdx)}
-                alt="enemy"
-                style={{
-                  position: 'absolute', top: '-4px', left: '-4px',
-                  width: `${TILE_SIZE + 8}px`, height: `${TILE_SIZE + 8}px`,
-                  objectFit: 'contain', imageRendering: 'pixelated', zIndex: 5,
-                  filter: isActiveEnemy
-                    ? 'drop-shadow(0 0 5px rgba(239,68,68,0.9))'
-                    : 'drop-shadow(0 0 3px rgba(251,191,36,0.6))',
-                  animation: isActiveEnemy ? 'bounce-enemy 1s infinite' : 'none',
-                }}
-              />
+              <img src={getBossSprite(enemyIdx)} alt="enemy" style={{
+                position: 'absolute', top: '-8px', left: '-8px',
+                width: `${TILE_SIZE + 16}px`, height: `${TILE_SIZE + 16}px`,
+                objectFit: 'contain', imageRendering: 'pixelated', zIndex: 5,
+                filter: isActiveEnemy ? 'drop-shadow(0 0 8px rgba(239,68,68,0.9))' : 'drop-shadow(0 0 4px rgba(251,191,36,0.6))',
+                animation: isActiveEnemy ? 'bounce-enemy 1s infinite' : 'none',
+              }} />
             )}
             {isEnemy && isDefeated && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '16px', zIndex: 5,
+                fontSize: '28px', zIndex: 5,
               }}>✅</div>
             )}
-
             {isPlayer && (
-              <img
-                src={HERO_SPRITES[heroDir]}
-                alt="player"
-                style={{
-                  position: 'absolute', top: '-8px', left: '-4px',
-                  width: `${TILE_SIZE + 8}px`, height: `${TILE_SIZE + 16}px`,
-                  objectFit: 'contain', imageRendering: 'pixelated', zIndex: 10,
-                  filter: 'drop-shadow(0 0 6px rgba(56,189,248,0.8))',
-                }}
-              />
+              <img src={HERO_SPRITES[heroDir]} alt="player" style={{
+                position: 'absolute', top: '-12px', left: '-6px',
+                width: `${TILE_SIZE + 12}px`, height: `${TILE_SIZE + 24}px`,
+                objectFit: 'contain', imageRendering: 'pixelated', zIndex: 10,
+                filter: 'drop-shadow(0 0 8px rgba(56,189,248,0.9))',
+              }} />
             )}
           </div>
         );
@@ -324,46 +269,78 @@ export const Overworld = ({
     return cells;
   };
 
+  const viewportW = VIEW_COLS * TILE_SIZE;
+  const viewportH = VIEW_ROWS * TILE_SIZE;
+
   return (
-    <div className="retro-container p-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <h2 className="text-glow mb-2">Virenland - Große Welt</h2>
-      <p className="mb-2 text-sm" style={{ color: '#94a3b8' }}>
-        WASD / Pfeiltasten: Bewegen &nbsp;|&nbsp;
-        <kbd style={{ background: '#1e293b', padding: '0 4px', borderRadius: 3 }}>M</kbd>: Weltkarte
-      </p>
-
-      <button
-        id="world-map-btn"
-        onClick={onShowWorldMap}
-        style={{ marginBottom: '0.5rem', background: '#1e3a5f', border: '1px solid #3b82f6', color: '#93c5fd' }}
-      >
-        🗺️ Weltkarte anzeigen
-      </button>
-
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      {/* Game viewport */}
       <div
         id="overworld-viewport"
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${VIEW_COLS}, ${TILE_SIZE}px)`,
           gridTemplateRows: `repeat(${VIEW_ROWS}, ${TILE_SIZE}px)`,
+          width: `${viewportW}px`,
+          height: `${viewportH}px`,
           overflow: 'hidden',
           border: '4px solid #334155',
           backgroundColor: '#0b1120',
           imageRendering: 'pixelated',
+          flexShrink: 0,
         }}
       >
         {renderViewport()}
       </div>
 
-      <div className="mt-4 text-center">
-        <p><strong>Aktuelles Ziel:</strong> {currentLevel ? currentLevel.name : '🎉 Spiel komplett gelöst!'}</p>
-        <p style={{ fontSize: '12px', color: '#64748b' }}>Koordinaten: {playerPos.x}, {playerPos.y}</p>
+      {/* Right info panel */}
+      <div style={{
+        width: '200px',
+        height: `${viewportH}px`,
+        background: '#0f172a',
+        border: '4px solid #334155',
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '12px',
+        gap: '12px',
+        boxSizing: 'border-box',
+        flexShrink: 0,
+      }}>
+        {/* Hero portrait */}
+        <img src={imgHero} alt="Hero" style={{
+          width: '80px', height: '80px',
+          objectFit: 'contain', imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 0 8px rgba(56,189,248,0.6))',
+        }} />
+
+        <div style={{ width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
+          <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktuelles Ziel</div>
+          <div style={{ fontSize: '12px', color: '#93c5fd', lineHeight: 1.4, wordBreak: 'break-word' }}>
+            {currentLevel ? currentLevel.name : '🎉 Spiel komplett gelöst!'}
+          </div>
+        </div>
+
+        <div style={{ width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
+          <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Position</div>
+          <div style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace' }}>
+            {playerPos.x}, {playerPos.y}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 'auto', width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
+          <div style={{ fontSize: '10px', color: '#475569', lineHeight: 1.6 }}>
+            <div>WASD / ↑↓←→ Bewegen</div>
+            <div>M — Weltkarte</div>
+          </div>
+        </div>
       </div>
 
       <style>{`
         @keyframes bounce-enemy {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          50% { transform: translateY(-6px); }
         }
       `}</style>
     </div>
