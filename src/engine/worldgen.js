@@ -1,5 +1,6 @@
 import { levels } from './levels';
 import { mapBase } from './map_data';
+import savedWorld from './world.json'; // Vite handles JSON imports and HMR nicely!
 
 const MAP_WIDTH = 100;
 const MAP_HEIGHT = 100;
@@ -13,7 +14,34 @@ const lcg = (seed) => () => {
 
 export const generateWorld = () => {
     const random = lcg(12345);
-    const grid = JSON.parse(JSON.stringify(mapBase));
+    // If we have a fully loaded/saved world.json, return it directly
+    // Wait, we still need pathNodes and enemyPositions for the game logic!
+    // But we don't need to actually modify the grid if world.json is our authoritative grid.
+    
+    // We'll calculate the path and enemies for game logic, but we won't mutate `grid` 
+    // because `grid` comes directly from the saved world.json.
+    
+    let grid;
+    const isUsingSaved = savedWorld && Object.keys(savedWorld).length > 0;
+    
+    if (isUsingSaved) {
+        if (Array.isArray(savedWorld)) {
+            grid = JSON.parse(JSON.stringify(savedWorld));
+        } else {
+            grid = [];
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                const row = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    // Read from user-requested JSON format {"x0": {"y0": "grass_no"}}
+                    row.push(savedWorld[`x${x}`]?.[`y${y}`] || 'meer');
+                }
+                grid.push(row);
+            }
+        }
+    } else {
+        grid = JSON.parse(JSON.stringify(mapBase));
+    }
+
     const pathNodes = [];
     let cx = 5, cy = 5;
     pathNodes.push({ x: cx, y: cy });
@@ -30,12 +58,15 @@ export const generateWorld = () => {
 
             cx = Math.max(2, Math.min(MAP_WIDTH - 3, cx));
             cy = Math.max(2, Math.min(MAP_HEIGHT - 3, cy));
-            grid[cy][cx] = 'weg';
 
-            for (let dy = -1; dy <= 1; dy++) {
-                for (let dx = -1; dx <= 1; dx++) {
-                    if (Math.abs(dx) + Math.abs(dy) <= 1 && grid[cy + dy][cx + dx] !== 'weg') {
-                        grid[cy + dy][cx + dx] = 'grass';
+            if (!isUsingSaved) {
+                grid[cy][cx] = 'weg';
+
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (Math.abs(dx) + Math.abs(dy) <= 1 && grid[cy + dy][cx + dx] !== 'weg') {
+                            grid[cy + dy][cx + dx] = 'grass';
+                        }
                     }
                 }
             }
@@ -59,14 +90,16 @@ export const generateWorld = () => {
         const midX = Math.floor((start.x + end.x) / 2);
         const midY = Math.floor((start.y + end.y) / 2);
 
-        grid[midY - 1][midX] = 'fluss';
-        grid[midY + 1][midX] = 'fluss';
-        grid[midY][midX - 1] = 'fluss';
-        grid[midY][midX + 1] = 'fluss';
-        if (start.x !== end.x) { grid[midY][midX - 1] = 'weg'; grid[midY][midX + 1] = 'weg'; }
-        if (start.y !== end.y) { grid[midY - 1][midX] = 'weg'; grid[midY + 1][midX] = 'weg'; }
+        if (!isUsingSaved) {
+            grid[midY - 1][midX] = 'fluss';
+            grid[midY + 1][midX] = 'fluss';
+            grid[midY][midX - 1] = 'fluss';
+            grid[midY][midX + 1] = 'fluss';
+            if (start.x !== end.x) { grid[midY][midX - 1] = 'weg'; grid[midY][midX + 1] = 'weg'; }
+            if (start.y !== end.y) { grid[midY - 1][midX] = 'weg'; grid[midY + 1][midX] = 'weg'; }
 
-        grid[midY][midX] = 'weg';
+            grid[midY][midX] = 'weg';
+        }
 
         enemyPositions.push({ x: midX, y: midY });
     }
@@ -74,11 +107,14 @@ export const generateWorld = () => {
     levels.forEach((lvl, idx) => {
         lvl.mapProps = { x: enemyPositions[idx].x, y: enemyPositions[idx].y };
     });
-    for (let yy = -2; yy <= 2; yy++) {
-        for (let xx = -2; xx <= 2; xx++) {
-            grid[5 + yy][5 + xx] = 'grass';
+    
+    if (!isUsingSaved) {
+        for (let yy = -2; yy <= 2; yy++) {
+            for (let xx = -2; xx <= 2; xx++) {
+                grid[5 + yy][5 + xx] = 'grass';
+            }
         }
     }
 
-    return { grid, pathNodes, enemyPositions };
+    return { grid, pathNodes, enemyPositions, isGenerated: !isUsingSaved };
 };

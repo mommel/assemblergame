@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Overworld } from './components/Overworld';
 import { WorldOverview } from './components/WorldOverview';
 import { BattleIDE } from './components/BattleIDE';
+import { MapEditor } from './components/MapEditor';
 import { levels } from './engine/levels';
 import { generateWorld } from './engine/worldgen';
 import imgTitle from './assets/title.png';
@@ -20,7 +21,9 @@ function App() {
   const [foughtLevelIndex, setFoughtLevelIndex] = useState(0);
   const [preBattlePos, setPreBattlePos] = useState({ x: 5, y: 5 });
 
-  const { grid: mapGrid } = useMemo(() => generateWorld(), []);
+  const { grid: mapGrid, isGenerated } = useMemo(() => generateWorld(), []);
+
+  const isEditorMode = new URLSearchParams(window.location.search).get('editor') === 'true';
 
   const handleEncounter = (level, posBeforeBattle, bossIdx) => {
     setPreBattlePos(posBeforeBattle);
@@ -40,6 +43,14 @@ function App() {
     setPlayerPos(preBattlePos); // restore pre-battle position
     setInBattle(false);
   };
+
+  if (isEditorMode) {
+    return (
+      <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617' }}>
+        <MapEditor initialGrid={mapGrid} isGenerated={isGenerated} />
+      </div>
+    );
+  }
 
   if (showWorldMap) {
     return (
@@ -94,3 +105,4 @@ function App() {
 }
 
 export default App;
+
