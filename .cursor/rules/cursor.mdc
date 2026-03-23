@@ -1,0 +1,50 @@
+---
+description: Cursor IDE rules for the Assembly RPG project
+alwaysApply: true
+---
+
+# Cursor Rules - Assembly RPG
+
+## Projektkontext
+Browser-basiertes Assembly-Lern-RPG mit React + Vite.
+
+## Tile-Asset-System
+Tiles liegen in `src/assets/` - Namenskonvention: `<typ>_<richtungen>.jpg`
+- Typ: `grass`, `berg`, `fluss`, `meer`, `wald`, `weg`, `see`
+- Richtungen: `n`=Nord, `s`=Süd, `w`=West, `o`=Ost (Kombination der Nachbarn mit gleichem Typ)
+- Beispiele: `weg_nswo.jpg` (Kreuzung), `berg_no.jpg` (Berg mit Berg im N und O)
+
+## Terrain-Typ → Asset-Präfix Mapping
+| Terrain (mapGrid) | Asset-Präfix |
+|-------------------|-------------|
+| `grass`          | `grass` (kein Suffix nötig) |
+| `forest`         | `wald` |
+| `mountain`       | `berg` |
+| `meer`           | `meer` |
+| `fluss`          | `fluss` |
+| `weg`            | `weg` |
+| `see`            | `see` |
+
+## Kollision
+- Begehbar: `grass`, `weg`
+- Blockiert: `mountain`, `meer`, `fluss`, `see`, **`forest`**
+
+> ⚠️ Wald (`forest`) **blockiert** die Spielerbewegung!
+
+## Sprite-System
+Alle Charaktere sind PNG-Dateien mit Transparenz:
+| Asset | Verwendung |
+|-------|------------|
+| `hero.png` | Spieler stehend (idle) |
+| `hero_n/s/w/o.png` | Spieler nach Bewegung in Richtung N/S/W/O |
+| `boss_1.png` | Gegner (gerade Index) |
+| `boss_2.png` | Gegner (ungerade Index) |
+
+Rendering: `position: absolute` über Kachel, `objectFit: contain`, `imageRendering: pixelated`
+
+## Coding-Standards
+- Verwende React Hooks (useState, useEffect, useMemo)
+- Kein direktes DOM-Manipulation
+- Pfade als `/src/assets/...` für Vite
+
+## Keine externen Bibliotheken hinzufügen (außer schon enthaltene)
