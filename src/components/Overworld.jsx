@@ -29,7 +29,10 @@ export const TILE_SIZE = 64;
 export const MAP_WIDTH = 100;
 export const MAP_HEIGHT = 100;
 
-export const BLOCKED_TILES = new Set(['meer', 'mountain', 'fluss', 'see', 'forest']);
+export const isWalkable = (tileType) => {
+  if (!tileType) return false;
+  return tileType === 'grass' || tileType.startsWith('weg');
+};
 
 export const getTileAt = (grid, x, y) => {
   if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return 'meer';
@@ -97,7 +100,7 @@ const bfsNextStep = (grid, sx, sy, tx, ty) => {
       if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
       if (visited.has(key(nx, ny))) continue;
       const isTarget = nx === tx && ny === ty;
-      if (!isTarget && BLOCKED_TILES.has(grid[ny]?.[nx])) continue;
+      if (!isTarget && !isWalkable(grid[ny]?.[nx])) continue;
       const newPath = [...path, { x: nx, y: ny, dir }];
       if (isTarget) return newPath[0] || null;
       visited.add(key(nx, ny));
@@ -126,7 +129,7 @@ export const Overworld = ({
     const nextX = playerPos.x + dx;
     const nextY = playerPos.y + dy;
     if (nextX < 0 || nextX >= MAP_WIDTH || nextY < 0 || nextY >= MAP_HEIGHT) return;
-    if (BLOCKED_TILES.has(getTileAt(mapGrid, nextX, nextY))) return;
+    if (!isWalkable(getTileAt(mapGrid, nextX, nextY))) return;
     setHeroDir(dir);
     const posBeforeMove = { ...playerPos };
     onPlayerMove({ x: nextX, y: nextY });
