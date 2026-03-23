@@ -1,8 +1,19 @@
-# Virenland Assembly RPG
+![Assembler RPG](public/title.jpg)
 
 Ein Browser-basiertes Assembly-Lern-RPG.
 
 Du bist der Held und musst böse Bossgegener durch Assembler Code besiegen.
+
+![Worldview](public/worldview.jpg)
+
+![Battle](public/kampfscreen.jpg)
+
+## Features
+
+- Overworld mit verschiedenen Gebieten
+- Verschiedene Gegner mit unterschiedlichen Fähigkeiten
+- Assembler-Editor mit Syntax-Highlighting
+- Debugger mit Breakpoints
 
 ## Zustand
 
