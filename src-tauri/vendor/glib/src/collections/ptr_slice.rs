@@ -895,11 +895,13 @@ impl<T: TransparentPtrType> PtrSlice<T> {
             while self.len > len {
                 self.len -= 1;
                 let p = self.ptr.as_ptr().add(self.len);
-                ptr::drop_in_place::<T>(p as *mut T);
+                // First clear the underlying GlibType pointer in the slot,
+                // then drop the wrapper type T stored at this location.
                 ptr::write(
-                    p,
-                    Ptr::from(ptr::null_mut::<<T as GlibPtrDefault>::GlibType>()),
+                    p as *mut <T as GlibPtrDefault>::GlibType,
+                    ptr::null_mut::<<T as GlibPtrDefault>::GlibType>(),
                 );
+                ptr::drop_in_place::<T>(p as *mut T);
             }
         }
     }
