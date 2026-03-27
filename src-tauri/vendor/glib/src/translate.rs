@@ -1938,9 +1938,13 @@ pub unsafe fn c_ptr_array_len<P: Ptr>(mut ptr: *const P) -> usize {
     let mut len = 0;
 
     if !ptr.is_null() {
-        while !(*ptr).is_null() {
+        while !ptr.is_null() {
+            let current = *ptr;
+            if current.is_null() {
+                break;
+            }
             len += 1;
-            ptr = ptr.offset(1);
+            ptr = ptr.add(1);
         }
     }
     len
