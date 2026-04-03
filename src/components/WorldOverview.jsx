@@ -54,16 +54,39 @@ import imgWeg_swo from '../assets/weg_swo.jpg';
 import imgWeg_wo from '../assets/weg_wo.jpg';
 
 // ─── Boss Sprites ─────────────────────────────────────────────────────────────
-import imgBoss1 from '../assets/boss_1.png';
-import imgBoss2 from '../assets/boss_2.png';
-import imgBoss3 from '../assets/boss_3.png';
-import imgBoss4 from '../assets/boss_4.png';
-import imgBoss5 from '../assets/boss_5.png';
-import imgBoss6 from '../assets/boss_6.png';
-import imgBoss7 from '../assets/boss_7.png';
+import imgBoss1 from '../assets/boss_01.png';
+import imgBoss2 from '../assets/boss_02.png';
+import imgBoss3 from '../assets/boss_03.png';
+import imgBoss4 from '../assets/boss_04.png';
+import imgBoss5 from '../assets/boss_05.png';
+import imgBoss6 from '../assets/boss_06.png';
+import imgBoss7 from '../assets/boss_07.png';
+import imgBoss8 from '../assets/boss_08.png';
+import imgBoss9 from '../assets/boss_09.png';
+import imgBoss10 from '../assets/boss_10.png';
+import imgBoss11 from '../assets/boss_11.png';
+import imgBoss12 from '../assets/boss_12.png';
+import imgBoss13 from '../assets/boss_13.png';
+import imgBoss14 from '../assets/boss_14.png';
+import imgBoss15 from '../assets/boss_15.png';
+import imgBoss16 from '../assets/boss_16.png';
+import imgBoss17 from '../assets/boss_17.png';
+import imgBoss18 from '../assets/boss_18.png';
+import imgBoss19 from '../assets/boss_19.png';
+import imgBoss20 from '../assets/boss_20.png';
+import imgBoss21 from '../assets/boss_21.png';
+import imgBoss22 from '../assets/boss_22.png';
+import imgBoss23 from '../assets/boss_23.png';
+import imgBoss24 from '../assets/boss_24.png';
+import imgBoss25 from '../assets/boss_25.png';
+import imgBoss26 from '../assets/boss_26.png';
+import imgBoss27 from '../assets/boss_27.png';
+import imgBoss28 from '../assets/boss_28.png';
+import imgBoss29 from '../assets/boss_29.png';
+import imgBoss30 from '../assets/boss_30.png';
 import imgHero from '../assets/hero.png';
 
-export const BOSS_SPRITES = [imgBoss1, imgBoss2, imgBoss3, imgBoss4, imgBoss5, imgBoss6, imgBoss7];
+export const BOSS_SPRITES = [imgBoss1, imgBoss2, imgBoss3, imgBoss4, imgBoss5, imgBoss6, imgBoss7, imgBoss8, imgBoss9, imgBoss10, imgBoss11, imgBoss12, imgBoss13, imgBoss14, imgBoss15, imgBoss16, imgBoss17, imgBoss18, imgBoss19, imgBoss20, imgBoss21, imgBoss22, imgBoss23, imgBoss24, imgBoss25, imgBoss26, imgBoss27, imgBoss28, imgBoss29, imgBoss30];
 export const getBossSprite = (enemyIdx) => BOSS_SPRITES[enemyIdx % BOSS_SPRITES.length];
 
 const TILE_MAP = {

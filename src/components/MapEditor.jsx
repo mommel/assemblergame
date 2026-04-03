@@ -10,7 +10,7 @@ const BASE_CATEGORIES = [
   { label: 'Meer', generic: 'meer', prefix: 'meer' },
   { label: 'Fluss', generic: 'fluss', prefix: 'fluss' },
   { label: 'Weg', generic: 'weg', prefix: 'weg' },
-  { label: 'Boss', generic: 'boss_0', prefix: 'boss' }
+  { label: 'Boss', generic: 'boss_00', prefix: 'boss' }
 ];
 
 const getStructuredCategories = () => {
@@ -22,7 +22,8 @@ const getStructuredCategories = () => {
     if (cat.prefix === 'boss') {
       const versions = [];
       for (let i = 0; i < 30; i++) {
-        versions.push({ id: `boss_${i}`, label: `Boss Level ${i+1}` });
+        const padded = i < 10 ? `0${i}` : `${i}`;
+        versions.push({ id: `boss_${padded}`, label: `Boss Level ${i+1}` });
       }
       orientMap['default'] = versions;
     } else {
@@ -74,7 +75,18 @@ const CATEGORIES = getStructuredCategories();
 
 export const MapEditor = ({ initialGrid, initialBosses = {}, isGenerated }) => {
   const [grid, setGrid] = useState(initialGrid);
-  const [bosses, setBosses] = useState(initialBosses);
+  const [bosses, setBosses] = useState(() => {
+    const cleanBosses = {};
+    for (const [k, v] of Object.entries(initialBosses || {})) {
+      const p = parseInt(k, 10);
+      if (!isNaN(p)) {
+        const pad = p < 10 ? `0${p}` : `${p}`;
+        cleanBosses[pad] = v;
+      }
+    }
+    // ensure alphabetical order "00", "01"...
+    return Object.keys(cleanBosses).sort().reduce((acc, key) => { acc[key] = cleanBosses[key]; return acc; }, {});
+  });
 
   const [cursorPos, setCursorPos] = useState({ x: 5, y: 5 });
   const [panelMode, setPanelMode] = useState('closed'); // 'closed', 'type', 'orientation', 'version'
@@ -193,10 +205,15 @@ export const MapEditor = ({ initialGrid, initialBosses = {}, isGenerated }) => {
         e.preventDefault();
         const tileId = activeVersions[selectedVersIdx].id;
         if (tileId.startsWith('boss_')) {
-          const bossId = parseInt(tileId.split('_')[1], 10);
+          const bossId = tileId.split('_')[1];
           const newBosses = { ...bosses, [bossId]: { x: cursorPos.x, y: cursorPos.y } };
-          setBosses(newBosses);
-          saveMap(grid, newBosses);
+          // Ensure predictable sorting logic on every key placement
+          const sortedBosses = Object.keys(newBosses).sort().reduce((acc, key) => {
+             acc[key] = newBosses[key];
+             return acc;
+          }, {});
+          setBosses(sortedBosses);
+          saveMap(grid, sortedBosses);
         } else {
           const newGrid = grid.map(row => [...row]);
           newGrid[cursorPos.y][cursorPos.x] = tileId;
@@ -366,7 +383,7 @@ export const MapEditor = ({ initialGrid, initialBosses = {}, isGenerated }) => {
         </div>,
         ...activeOrient.versions.map((ver, idx) => {
           const isActive = selectedVersIdx === idx;
-          const img = activeType.prefix === 'boss' ? getBossSprite(parseInt(ver.id.replace('boss_', ''))) : getTileImage(grid, 0, 0, ver.id);
+          const img = activeType.prefix === 'boss' ? getBossSprite(parseInt(ver.id.split('_')[1], 10)) : getTileImage(grid, 0, 0, ver.id);
           return (
             <div 
               key={`vers-${idx}`} 

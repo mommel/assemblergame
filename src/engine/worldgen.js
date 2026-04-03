@@ -106,8 +106,10 @@ export const generateWorld = () => {
 
     const enemyPositions = new Array(30).fill(null);
     for (let i = 0; i < 30; i++) {
-        if (initialBosses[i]) {
-            enemyPositions[i] = { x: initialBosses[i].x, y: initialBosses[i].y };
+        const paddedKey = i < 10 ? `0${i}` : `${i}`;
+        const b = initialBosses[paddedKey] || initialBosses[i] || initialBosses[String(i)];
+        if (b) {
+            enemyPositions[i] = { x: b.x, y: b.y };
         }
     }
 

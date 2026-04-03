@@ -21,7 +21,7 @@ const mapEditorPlugin = () => ({
                 cols.push(`"y${y}": "${data.grid[y][x]}"`);
               }
               out += cols.join(', ');
-              out += ` }${x < 99 || data.bosses ? ',' : ''}\n`;
+              out += ` }${x < 99 ? ',' : ''}\n`;
             }
             if (data.bosses) {
               out += `  ,"bosses": ${JSON.stringify(data.bosses, null, 2)}\n`;
