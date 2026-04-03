@@ -40,6 +40,7 @@ export const getTileAt = (grid, x, y) => {
 };
 
 export const getTileId = (grid, x, y, type) => {
+  if (!type) return 'grass';
   if (TILE_MAP[type]) return type;
   if (type === 'see') return TILE_MAP['see'] ? 'see' : 'grass';
 

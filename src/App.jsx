@@ -22,7 +22,7 @@ function App() {
   const [foughtLevelIndex, setFoughtLevelIndex] = useState(0);
   const [preBattlePos, setPreBattlePos] = useState({ x: 5, y: 5 });
 
-  const { grid: mapGrid, isGenerated } = useMemo(() => generateWorld(), []);
+  const { grid: mapGrid, isGenerated, initialBosses } = useMemo(() => generateWorld(), []);
   const unlockedInstructions = useMemo(
     () => getUnlockedInstructionsForBoss(currentLevelIndex + 1),
     [currentLevelIndex]
@@ -53,7 +53,7 @@ function App() {
   if (isEditorMode) {
     return (
       <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020617' }}>
-        <MapEditor initialGrid={mapGrid} isGenerated={isGenerated} />
+        <MapEditor initialGrid={mapGrid} initialBosses={initialBosses} isGenerated={isGenerated} />
       </div>
     );
   }

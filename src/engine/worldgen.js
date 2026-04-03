@@ -23,6 +23,7 @@ export const generateWorld = () => {
     
     let grid;
     const isUsingSaved = savedWorld && Object.keys(savedWorld).length > 0;
+    const initialBosses = isUsingSaved && savedWorld.bosses ? savedWorld.bosses : {};
     
     if (isUsingSaved) {
         if (Array.isArray(savedWorld)) {
@@ -32,7 +33,6 @@ export const generateWorld = () => {
             for (let y = 0; y < MAP_HEIGHT; y++) {
                 const row = [];
                 for (let x = 0; x < MAP_WIDTH; x++) {
-                    // Read from user-requested JSON format {"x0": {"y0": "grass_no"}}
                     row.push(savedWorld[`x${x}`]?.[`y${y}`] || 'meer');
                 }
                 grid.push(row);
@@ -83,7 +83,7 @@ export const generateWorld = () => {
         }
     }
 
-    const enemyPositions = [];
+    const algoEnemyPositions = [];
     for (let i = 0; i < 30; i++) {
         const start = pathNodes[i];
         const end = pathNodes[i + 1];
@@ -101,11 +101,26 @@ export const generateWorld = () => {
             grid[midY][midX] = 'weg';
         }
 
-        enemyPositions.push({ x: midX, y: midY });
+        algoEnemyPositions.push({ x: midX, y: midY });
+    }
+
+    const enemyPositions = new Array(30).fill(null);
+    for (let i = 0; i < 30; i++) {
+        if (initialBosses[i]) {
+            enemyPositions[i] = { x: initialBosses[i].x, y: initialBosses[i].y };
+        }
+    }
+
+    for (let i = 0; i < 30; i++) {
+        if (!enemyPositions[i]) {
+            enemyPositions[i] = algoEnemyPositions[i];
+        }
     }
 
     levels.forEach((lvl, idx) => {
-        lvl.mapProps = { x: enemyPositions[idx].x, y: enemyPositions[idx].y };
+        if (enemyPositions[idx]) {
+            lvl.mapProps = { x: enemyPositions[idx].x, y: enemyPositions[idx].y };
+        }
     });
     
     if (!isUsingSaved) {
@@ -116,5 +131,5 @@ export const generateWorld = () => {
         }
     }
 
-    return { grid, pathNodes, enemyPositions, isGenerated: !isUsingSaved };
+    return { grid, pathNodes, enemyPositions, isGenerated: !isUsingSaved, initialBosses };
 };
