@@ -1,4 +1,6 @@
-export const levels = [
+import { getBossSpellPlan } from './spellProgression';
+
+const baseLevels = [
   {
     id: 1,
     name: "Level 1: Das Erste Programm",
@@ -330,3 +332,25 @@ export const levels = [
     solution: "IN\nMOV R1, ACC\nIN\nADD R1\nMOV R1, ACC\nIN\nADD R1\nOUT\nJMP 1"
   }
 ];
+
+const spellPlanByBossId = Object.fromEntries(
+  getBossSpellPlan().map((entry) => [entry.bossId, entry])
+);
+
+export const levels = baseLevels.map((level) => {
+  const spellPlan = spellPlanByBossId[level.id];
+  if (!spellPlan) return level;
+
+  const rewardLine = spellPlan.grantedAfterWin
+    ? `\n\nReward nach Sieg: Neuer Spell freigeschaltet → ${spellPlan.grantedAfterWin}`
+    : '';
+
+  return {
+    ...level,
+    requiredInstructions: spellPlan.required,
+    unlockedInstructions: spellPlan.unlockedBeforeFight,
+    rewardInstruction: spellPlan.grantedAfterWin,
+    description: `${level.description}${rewardLine}`,
+  };
+});
+

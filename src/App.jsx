@@ -5,6 +5,7 @@ import { BattleIDE } from './components/BattleIDE';
 import { MapEditor } from './components/MapEditor';
 import { levels } from './engine/levels';
 import { generateWorld } from './engine/worldgen';
+import { getUnlockedInstructionsForBoss } from './engine/spellProgression';
 import imgTitle from './assets/title.png';
 import './index.css';
 
@@ -22,6 +23,11 @@ function App() {
   const [preBattlePos, setPreBattlePos] = useState({ x: 5, y: 5 });
 
   const { grid: mapGrid, isGenerated } = useMemo(() => generateWorld(), []);
+  const unlockedInstructions = useMemo(
+    () => getUnlockedInstructionsForBoss(currentLevelIndex + 1),
+    [currentLevelIndex]
+  );
+
 
   const isEditorMode = new URLSearchParams(window.location.search).get('editor') === 'true';
 
@@ -98,6 +104,7 @@ function App() {
           onFlee={handleFlee}
           autoPlay={autoPlay}
           levelIndex={foughtLevelIndex}
+          unlockedInstructions={unlockedInstructions}
         />
       )}
     </div>

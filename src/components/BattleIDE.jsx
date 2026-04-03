@@ -2,8 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Interpreter } from '../engine/interpreter';
 import { getBossSprite } from './WorldOverview';
 
+const getDisallowedCommands = (sourceCode, unlockedInstructions) => {
+  const allowed = new Set(unlockedInstructions.map((instruction) => instruction.toUpperCase()));
+  const used = sourceCode
+    .split('\n')
+    .map((line) => line.split('//')[0].trim().toUpperCase())
+    .filter(Boolean)
+    .map((line) => line.split(/[\s,]+/)[0]);
 
-export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex }) => {
+  return [...new Set(used.filter((command) => !allowed.has(command)))];
+};
+
+export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlockedInstructions = [] }) => {
   const [code, setCode] = useState("IN\nOUT\n");
   const [gameState, setGameState] = useState({
     registers: { R1: 0, R2: 0, R3: 0, R4: 0, ACC: 0 },
@@ -52,6 +62,11 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex }) =>
   const handleAutoSolve = () => setCode(level.solution || "IN\nOUT");
 
   const handleRun = () => {
+    const disallowed = getDisallowedCommands(code, unlockedInstructions);
+    if (disallowed.length > 0) {
+      setStatusMsg(`Spell noch gesperrt: ${disallowed.join(', ')}. Verfügbar: ${unlockedInstructions.join(', ')}`);
+      return;
+    }
     const interp = interpreterRef.current;
     interp.load(code, level.inputs);
     interp.runAll(level.maxCycles);
@@ -60,6 +75,11 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex }) =>
   };
 
   const handleStep = () => {
+    const disallowed = getDisallowedCommands(code, unlockedInstructions);
+    if (disallowed.length > 0) {
+      setStatusMsg(`Spell noch gesperrt: ${disallowed.join(', ')}. Verfügbar: ${unlockedInstructions.join(', ')}`);
+      return;
+    }
     const interp = interpreterRef.current;
     if (interp.cycleCount === 0 || interp.done || interp.error) {
       interp.load(code, level.inputs);
@@ -137,6 +157,9 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex }) =>
           <p style={{ color: '#cbd5e1', whiteSpace: 'pre-line', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
             {level.description}
           </p>
+          <div style={{ fontSize: '12px', color: '#93c5fd', background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '8px' }}>
+            Verfügbare Spells: {unlockedInstructions.join(', ')}
+          </div>
 
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '10px' }}>
             <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '6px', color: '#94a3b8' }}>
