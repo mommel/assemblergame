@@ -4,7 +4,7 @@ const baseLevels = [
   {
     id: 1,
     name: "Level 1: Das Erste Programm",
-    description: "Willkommen beim Assembler RPG! Befehle:\nIN - Liest eine Zahl in den ACC (Accumulator).\nOUT - Schreibt den ACC in die Ausgabe.\n\nAufgabe: Lies alle Zahlen ein und gib sie unverändert wieder aus.",
+    description: "Aufgabe: Lies alle Zahlen ein und gib sie unverändert wieder aus.",
     inputs: [5, 12, -3],
     expectedOutputs: [5, 12, -3],
     maxCycles: 20,
@@ -15,7 +15,7 @@ const baseLevels = [
   {
     id: 2,
     name: "Level 2: Arithmetik Plus",
-    description: "Befehle:\nADD x - Addiert x zum ACC.\n\nAufgabe: Lies Zahlen ein, addiere jeweils 5 dazu und gib sie aus.",
+    description: "Aufgabe: Lies Zahlen ein, addiere jeweils 5 dazu und gib sie aus.",
     inputs: [10, 0, -5],
     expectedOutputs: [15, 5, 0],
     maxCycles: 30,
@@ -26,7 +26,7 @@ const baseLevels = [
   {
     id: 3,
     name: "Level 3: Subtraktion",
-    description: "Befehle:\nSUB x - Subtrahiert x vom ACC.\n\nAufgabe: Lies jede Zahl, ziehe 3 davon ab und gib das Ergebnis aus.",
+    description: "Aufgabe: Lies jede Zahl, ziehe 3 davon ab und gib das Ergebnis aus.",
     inputs: [10, 3, 0],
     expectedOutputs: [7, 0, -3],
     maxCycles: 30,
@@ -37,7 +37,7 @@ const baseLevels = [
   {
     id: 4,
     name: "Level 4: Multiplikation mit 2",
-    description: "Es gibt keinen MUL-Befehl! Aber du kannst den ACC mit sich selbst addieren.\nNutze Register: MOV R1, ACC.\nDann ADD R1.\n\nAufgabe: Verdopple jede Eingabe.",
+    description: "Aufgabe: Verdopple jede Eingabe.",
     inputs: [5, 10, -2],
     expectedOutputs: [10, 20, -4],
     maxCycles: 40,
@@ -59,7 +59,7 @@ const baseLevels = [
   {
     id: 6,
     name: "Level 6: Bedingte Ausgabe (Zero)",
-    description: "Bedingungen:\nCMP x - Vergleicht ACC mit x.\nJEQ line - Springt zur Zeile, wenn ACC == x.\n\nAufgabe: Wenn die Eingabe 0 ist, gib 1 aus. Ansonsten gib 0 aus.",
+    description: "Aufgabe: Wenn die Eingabe 0 ist, gib 1 aus. Ansonsten gib 0 aus.",
     inputs: [0, 5, 0, -2, 0],
     expectedOutputs: [1, 0, 1, 0, 1],
     maxCycles: 100,
@@ -70,7 +70,7 @@ const baseLevels = [
   {
     id: 7,
     name: "Level 7: Positivitäts-Filter",
-    description: "Befehle:\nJGT line (Jump if Greater Than)\n\nAufgabe: Gib nur die positiven ( > 0 ) Zahlen aus. Wirf alle anderen weg.",
+    description: "Aufgabe: Gib nur die positiven ( > 0 ) Zahlen aus. Wirf alle anderen weg.",
     inputs: [5, -2, 0, 10, -5],
     expectedOutputs: [5, 10],
     maxCycles: 50,
@@ -81,7 +81,7 @@ const baseLevels = [
   {
     id: 8,
     name: "Level 8: Negative Filter",
-    description: "Befehle:\nJLT line (Jump if Less Than)\n\nAufgabe: Gib nur die rein negativen ( < 0 ) Zahlen aus.",
+    description: "Aufgabe: Gib nur die rein negativen ( < 0 ) Zahlen aus.",
     inputs: [3, -4, 0, -1, 5],
     expectedOutputs: [-4, -1],
     maxCycles: 50,
@@ -342,7 +342,7 @@ export const levels = baseLevels.map((level) => {
   if (!spellPlan) return level;
 
   const rewardLine = spellPlan.grantedAfterWin
-    ? `\n\nReward nach Sieg: Neuer Spell freigeschaltet → ${spellPlan.grantedAfterWin}`
+    ? `\n\nBelohnung bei Sieg: Pergament des ${spellPlan.grantedAfterWin} Spells`
     : '';
 
   return {
@@ -350,7 +350,8 @@ export const levels = baseLevels.map((level) => {
     requiredInstructions: spellPlan.required,
     unlockedInstructions: spellPlan.unlockedBeforeFight,
     rewardInstruction: spellPlan.grantedAfterWin,
-    description: `${level.description}${rewardLine}`,
+    description: `${level.description}`,
+    grantsReward: `${rewardLine}`,
   };
 });
 

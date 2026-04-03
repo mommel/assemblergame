@@ -134,21 +134,8 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
           padding: '14px',
           overflow: 'hidden',
           minWidth: 0,
-        }}>
-          {/* Boss sprite */}
+        }}>        
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img
-              src={bossImg}
-              alt="boss"
-              style={{
-                width: '72px', height: '72px',
-                objectFit: 'contain',
-                imageRendering: 'pixelated',
-                filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.7))',
-                animation: 'bounce-boss 1.2s infinite',
-                flexShrink: 0,
-              }}
-            />
             <div>
               <h2 className="text-glow" style={{ margin: 0, fontSize: '1.1rem' }}>{level.name}</h2>
             </div>
@@ -182,10 +169,6 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
               ))}
             </div>
           </div>
-
-          <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b', padding: '8px 16px' }}>
-            Fliehen (Zurück)
-          </button>
         </div>
 
         {/* === MIDDLE PANEL: Code Editor — fills height, textarea is flex:1 === */}
@@ -220,8 +203,11 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
             onChange={(e) => setCode(e.target.value)}
             spellCheck={false}
           />
-
-          {/* Status message — always rendered to pre-reserve space, never causes layout shift */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div>
+              <h2 className="text-glow-loot" style={{ margin: 0, fontSize: '0.9rem' }}>{level.grantsReward}</h2>
+            </div>
+          </div>
           <div style={{
               marginTop: '10px',
               minHeight: '44px',
@@ -243,6 +229,7 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
         <div style={{
           flex: 0.75,
           display: 'flex',
+          alignItems: 'center',
           flexDirection: 'column',
           gap: '10px',
           background: '#0f172a',
@@ -251,6 +238,18 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
           padding: '14px',
           overflow: 'hidden',
         }}>
+          <img
+              src={bossImg}
+              alt="boss"
+              style={{
+                width: '72px', height: '72px',
+                objectFit: 'contain',
+                imageRendering: 'pixelated',
+                filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.7))',
+                animation: 'bounce-boss-fight 2.1s infinite',
+                flexShrink: 0,
+              }}
+            />
           <h3 style={{ margin: 0, fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CPU State</h3>
           <div style={{ background: '#1e293b', borderRadius: '6px', padding: '10px', fontFamily: 'monospace', fontSize: '13px' }}>
             <div>ACC: <span className="text-glow">{gameState.registers.ACC}</span></div>
@@ -284,8 +283,13 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
         boxSizing: 'border-box',
         alignItems: 'center',
       }}>
+         <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b', padding: '8px 16px' }}>
+            Fliehen (Zurück)
+          </button>
+
         <button id="run-btn" onClick={handleRun} style={{ background: '#166534', padding: '8px 20px' }}>▶ Run</button>
         <button onClick={handleStep} style={{ background: '#854d0e', padding: '8px 20px' }}>⏭ Step</button>
+        
         <button onClick={handleAutoSolve} style={{ background: '#4338ca', padding: '8px 20px', marginLeft: 'auto' }}>🤖 Auto-Solve</button>
       </div>
 
@@ -293,6 +297,33 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
         @keyframes bounce-boss {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-6px); }
+        }
+        @keyframes bounce-boss-fight {
+            0%, 100% {
+              transform: translateX(0) translateY(0);
+              filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));
+            }
+            40% { transform: translateX(0) translateY(-4px); }
+            50% { 
+              transform: translateX(-12px) translateY(2px); 
+              filter: drop-shadow(0 0 8px rgba(241, 228, 41, 0.7));
+            }
+            51% {
+              filter: drop-shadow(0 0 4px rgba(231, 97, 8, 0.97));
+            }  
+            52% {
+              filter: drop-shadow(0 0 2px rgba(231, 23, 8, 0.7));
+            }  
+            60% { transform: translateX(4px) translateY(0); }
+            70% {
+              transform: translateX(-2px) translateY(0);
+              filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.7));
+            }
+            80% {
+              transform: translateX(-4px) translateY(0);
+              filter: drop-shadow(0 0 8px rgba(231, 23, 8, 0.7));
+            }
+            90% { transform: translateX(5px) translateY(0); }
         }
       `}</style>
     </div>
