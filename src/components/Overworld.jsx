@@ -269,39 +269,32 @@ export const Overworld = ({
       }}>
         {/* Hero portrait */}
         <img src={HERO_SPRITES.idle} alt="Hero" style={{
-          width: '80px', height: '80px',
+          width: '128px', height: '128px',
           objectFit: 'contain', imageRendering: 'pixelated',
           filter: 'drop-shadow(0 0 8px rgba(56,189,248,0.6))',
         }} />
 
         <div style={{ width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
-          <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktuelles Ziel</div>
-          <div style={{ fontSize: '12px', color: '#93c5fd', lineHeight: 1.4, wordBreak: 'break-word' }}>
+          <div class="oswald-bold" style={{ fontSize: '18px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktuelles Ziel</div>
+          <div class="rock-salt-regular" style={{ fontSize: '12px', color: '#93c5fd', lineHeight: 1.4, wordBreak: 'break-word' }}>
             {currentLevel ? currentLevel.name : '🎉 Spiel komplett gelöst!'}
           </div>
         </div>
 
         <div style={{ width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
-          <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Position</div>
-          <div style={{ fontSize: '13px', color: '#38bdf8', fontFamily: 'monospace' }}>
+          <div class="oswald-bold" style={{ fontSize: '18px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Position</div>
+          <div class="rancho-regular" style={{ fontSize: '18px', color: '#38bdf8' }}>
             {playerPos.x}, {playerPos.y}
           </div>
         </div>
 
         <div style={{ marginTop: 'auto', width: '100%', borderTop: '1px solid #334155', paddingTop: '10px' }}>
-          <div style={{ fontSize: '10px', color: '#475569', lineHeight: 1.6 }}>
-            <div>WASD / ↑↓←→ Bewegen</div>
-            <div>M — Weltkarte</div>
+          <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.6 }}>
+            <div class="rock-salt-regular">WASD / ↑↓←→ Bewegen</div>
+            <div class="rock-salt-regular">M — Weltkarte</div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes bounce-enemy {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-      `}</style>
     </div>
   );
 };

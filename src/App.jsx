@@ -77,7 +77,7 @@ function App() {
     <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <img src={imgTitle} alt="Virenland Assembly RPG" style={{ height: '70px', objectFit: 'contain', marginBottom: '0.75rem' }} />
 
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+      <div class="buttonstext" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
         <button
           onClick={() => setAutoPlay(!autoPlay)}
           style={{ background: autoPlay ? '#dc2626' : '#059669', fontWeight: 'bold' }}

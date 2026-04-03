@@ -1,6 +1,70 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Interpreter } from '../engine/interpreter';
 import { getBossSprite } from './WorldOverview';
+import Spellbook from "./Spellbook";
+
+const SPELLBOOK_ENTRIES = {
+  IN: {
+    title: 'IN',
+    description: 'Liest die nächste Zahl aus der Eingabe-Queue in den ACC.',
+    example: 'IN',
+    level: 1,
+  },
+  OUT: {
+    title: 'OUT',
+    description: 'Schreibt den aktuellen ACC-Wert in die Ausgabe-Queue.',
+    example: 'OUT',
+    level: 1,
+  },
+  JMP: {
+    title: 'JMP',
+    description: 'Springt immer zu einer Zielzeile.',
+    example: 'JMP 1',
+    level: 1,
+  },
+  ADD: {
+    title: 'ADD',
+    description: 'Addiert einen Wert zum ACC.',
+    example: 'ADD 5',
+    level: 2,
+  },
+  SUB: {
+    title: 'SUB',
+    description: 'Subtrahiert einen Wert vom ACC.',
+    example: 'SUB R1',
+    level: 3,
+  },
+  MOV: {
+    title: 'MOV',
+    description: 'Kopiert Werte zwischen ACC, Registern und Konstanten.',
+    example: 'MOV R1, ACC',
+    level: 4,
+  },
+  CMP: {
+    title: 'CMP',
+    description: 'Vergleicht ACC mit einem Wert und setzt EQ/GT/LT Flags.',
+    example: 'CMP 0',
+    level: 5,
+  },
+  JEQ: {
+    title: 'JEQ',
+    description: 'Springt zur Zielzeile, wenn EQ gesetzt ist.',
+    example: 'JEQ 7',
+    level: 6,
+  },
+  JGT: {
+    title: 'JGT',
+    description: 'Springt zur Zielzeile, wenn ACC größer war.',
+    example: 'JGT 5',
+    level: 7,
+  },
+  JLT: {
+    title: 'JLT',
+    description: 'Springt zur Zielzeile, wenn ACC kleiner war.',
+    example: 'JLT 9',
+    level: 8,
+  },
+};
 
 const getDisallowedCommands = (sourceCode, unlockedInstructions) => {
   const allowed = new Set(unlockedInstructions.map((instruction) => instruction.toUpperCase()));
@@ -15,6 +79,7 @@ const getDisallowedCommands = (sourceCode, unlockedInstructions) => {
 
 export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlockedInstructions = [] }) => {
   const [code, setCode] = useState("IN\nOUT\n");
+  const [isSpellbookOpen, setIsSpellbookOpen] = useState(false);
   const [gameState, setGameState] = useState({
     registers: { R1: 0, R2: 0, R3: 0, R4: 0, ACC: 0 },
     flags: { EQUAL: false, GREATER: false, LESS: false },
@@ -32,8 +97,19 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
     setGameState(prev => ({ ...prev, inputQueue: [...level.inputs], outputQueue: [] }));
     setStatusMsg('');
     setCode("IN\nOUT\n");
+    setIsSpellbookOpen(false);
     interpreterRef.current.reset();
   }, [level]);
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsSpellbookOpen(false);
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   useEffect(() => {
     if (autoPlay && !statusMsg) {
@@ -102,16 +178,27 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
 
   const bossIdx = levelIndex ?? 0;
   const bossImg = getBossSprite(bossIdx);
+  const spellbookEntries = unlockedInstructions.map((instruction) => {
+    const knownSpell = SPELLBOOK_ENTRIES[instruction];
+    if (knownSpell) return knownSpell;
+    return {
+      title: instruction,
+      description: 'Noch keine Beschreibung hinterlegt.',
+      example: instruction,
+    };
+  });
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 0,
-      width: '100%',
-      maxWidth: '1000px',
-    }}>
+    <div 
+      class="roboto-condensed-light"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 0,
+        width: '100%',
+        maxWidth: '1000px',
+      }}>
       {/* Main content row — FIXED height so panels never shift */}
       <div style={{
         display: 'flex',
@@ -123,31 +210,47 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
       }}>
 
         {/* === LEFT PANEL: Level info + queues + flee === */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          background: '#0f172a',
-          border: '2px solid #334155',
-          borderRadius: '8px',
-          padding: '14px',
-          overflow: 'hidden',
-          minWidth: 0,
-        }}>        
+        <div
+          class="descriptiontext" 
+
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            background: '#0f172a',
+            border: '2px solid #334155',
+            borderRadius: '8px',
+            padding: '14px',
+            overflow: 'hidden',
+            minWidth: 0,
+          }}>        
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div>
-              <h2 className="text-glow" style={{ margin: 0, fontSize: '1.1rem' }}>{level.name}</h2>
+              <h2 className="text-glow titletext" style={{ margin: 0, fontSize: '1.1rem' }}>{level.name}</h2>
             </div>
           </div>
 
-          <p style={{ color: '#cbd5e1', whiteSpace: 'pre-line', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
+          <p class="descriptiontext" style={{ color: '#cbd5e1', whiteSpace: 'pre-line', fontSize: '18px', lineHeight: 1.6, margin: 0 }}>
             {level.description}
           </p>
-          <div style={{ fontSize: '12px', color: '#93c5fd', background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '8px' }}>
-            Verfügbare Spells: {unlockedInstructions.join(', ')}
-          </div>
-
+          
+          <button
+            class="fontbig buttonstext"
+            type="button"
+            onClick={() => setIsSpellbookOpen(true)}
+            style={{
+              background: '#7c2d12',
+              border: '1px solid #c2410c',
+              color: '#ffedd5',
+              padding: '8px 14px',
+              width: '100%',
+              cursor: 'pointer',
+            }}
+          >
+            Spellbook
+          </button>
+          
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '10px' }}>
             <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '6px', color: '#94a3b8' }}>
               Eingabe-Queue ({gameState.inputQueue.length})
@@ -161,8 +264,8 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
 
           {/* Output — fixed min-height so adding items doesn't shift layout */}
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '10px', flexShrink: 0 }}>
-            <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', color: '#94a3b8' }}>Ausgabe / Ziel</div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>Erwartet: {level.expectedOutputs.join(' ')}</div>
+            <div style={{ fontWeight: 'bold',  fontSize: '1.1rem', marginBottom: '4px', color: '#94a3b8' }}>Ausgabe / Ziel</div>
+            <div style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '6px' }}>Erwartet: {level.expectedOutputs.join(' ')}</div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', minHeight: '26px', alignContent: 'flex-start' }}>
               {gameState.outputQueue.map((v, i) => (
                 <span key={i} className="text-glow" style={{ background: '#1e3a5f', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '13px' }}>{v}</span>
@@ -185,10 +288,9 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
         }}>
           <h3 style={{ margin: '0 0 10px 0', color: '#94a3b8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Code Editor</h3>
           <textarea
-            className="code-editor mono"
+            className="code-editor consoletext"
             style={{
               flex: 1,
-              fontFamily: "'Courier New', Courier, monospace",
               fontSize: '14px',
               color: '#4ade80',
               background: '#0a0f1a',
@@ -203,18 +305,19 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
             onChange={(e) => setCode(e.target.value)}
             spellCheck={false}
           />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            class="descriptiontext" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div>
-              <h2 className="text-glow-loot" style={{ margin: 0, fontSize: '0.9rem' }}>{level.grantsReward}</h2>
+              <h2 className="text-glow-loot" style={{ margin: 0 }}>{level.grantsReward}</h2>
             </div>
           </div>
-          <div style={{
+          <div
+            class="descriptiontext"
+            style={{
               marginTop: '10px',
               minHeight: '44px',
               padding: '8px 12px',
               borderRadius: '6px',
-              fontSize: '13px',
-              fontWeight: 'bold',
               boxSizing: 'border-box',
               visibility: statusMsg ? 'visible' : 'hidden',
               background: statusMsg.startsWith('Sieg') ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
@@ -271,21 +374,23 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
       </div>
 
       {/* === BUTTONS PANEL (separate row below) === */}
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        marginTop: '12px',
-        padding: '14px 20px',
-        background: '#0f172a',
-        border: '2px solid #334155',
-        borderRadius: '8px',
-        width: '100%',
-        boxSizing: 'border-box',
-        alignItems: 'center',
-      }}>
-         <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b', padding: '8px 16px' }}>
-            Fliehen (Zurück)
-          </button>
+      <div
+        class="fontbig buttonstext" 
+        style={{
+          display: 'flex',
+          gap: '10px',
+          marginTop: '12px',
+          padding: '14px 20px',
+          background: '#0f172a',
+          border: '2px solid #334155',
+          borderRadius: '8px',
+          width: '100%',
+          boxSizing: 'border-box',
+          alignItems: 'center',
+        }}>
+        <button onClick={onFlee} style={{ marginTop: 'auto', background: '#991b1b', padding: '8px 16px' }}>
+          Fliehen (Zurück)
+        </button>
 
         <button id="run-btn" onClick={handleRun} style={{ background: '#166534', padding: '8px 20px' }}>▶ Run</button>
         <button onClick={handleStep} style={{ background: '#854d0e', padding: '8px 20px' }}>⏭ Step</button>
@@ -293,39 +398,11 @@ export const BattleIDE = ({ level, onVictory, onFlee, autoPlay, levelIndex, unlo
         <button onClick={handleAutoSolve} style={{ background: '#4338ca', padding: '8px 20px', marginLeft: 'auto' }}>🤖 Auto-Solve</button>
       </div>
 
-      <style>{`
-        @keyframes bounce-boss {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-        @keyframes bounce-boss-fight {
-            0%, 100% {
-              transform: translateX(0) translateY(0);
-              filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));
-            }
-            40% { transform: translateX(0) translateY(-4px); }
-            50% { 
-              transform: translateX(-12px) translateY(2px); 
-              filter: drop-shadow(0 0 8px rgba(241, 228, 41, 0.7));
-            }
-            51% {
-              filter: drop-shadow(0 0 4px rgba(231, 97, 8, 0.97));
-            }  
-            52% {
-              filter: drop-shadow(0 0 2px rgba(231, 23, 8, 0.7));
-            }  
-            60% { transform: translateX(4px) translateY(0); }
-            70% {
-              transform: translateX(-2px) translateY(0);
-              filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.7));
-            }
-            80% {
-              transform: translateX(-4px) translateY(0);
-              filter: drop-shadow(0 0 8px rgba(231, 23, 8, 0.7));
-            }
-            90% { transform: translateX(5px) translateY(0); }
-        }
-      `}</style>
+      {isSpellbookOpen && (
+        <div class="spellbook-overlay">
+          <Spellbook spells={spellbookEntries} />
+        </div>
+      )}
     </div>
   );
 };

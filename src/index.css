@@ -1,5 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Bitcount:wght@400&family=Rancho&family=Rock+Salt&display=swap');
+
+.fontbig {
+  font-size: 24px;
+  letter-spacing: '0.04em';
+}
+.titletext {
+  font-family: "Rock Salt", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+.buttonstext {
+  font-family: "Rancho", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+.descriptiontext {
+  font-family: "Rancho", cursive;
+  font-weight: 400;
+}
+.consoletext {
+  font-family: "Bitcount", system-ui;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings:
+    "slnt" 0,
+    "CRSV" 0.5,
+    "ELSH" 0,
+    "ELXP" 0;
+}
 :root {
-  font-family: 'Inter', 'Roboto', sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -156,8 +186,54 @@ textarea.code-editor:focus {
   opacity: 0.6;
 }
 
+.spellbook-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background-color:  rgba(105, 7, 7, 0.7);
+}
+
+@keyframes bounce-enemy {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
   70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+@keyframes bounce-boss {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes bounce-boss-fight {
+    0%, 100% {
+      transform: translateX(0) translateY(0);
+      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));
+    }
+    40% { transform: translateX(0) translateY(-4px); }
+    50% { 
+      transform: translateX(-12px) translateY(2px); 
+      filter: drop-shadow(0 0 8px rgba(241, 228, 41, 0.7));
+    }
+    51% {
+      filter: drop-shadow(0 0 4px rgba(231, 97, 8, 0.97));
+    }  
+    52% {
+      filter: drop-shadow(0 0 2px rgba(231, 23, 8, 0.7));
+    }  
+    60% { transform: translateX(4px) translateY(0); }
+    70% {
+      transform: translateX(-2px) translateY(0);
+      filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.7));
+    }
+    80% {
+      transform: translateX(-4px) translateY(0);
+      filter: drop-shadow(0 0 8px rgba(231, 23, 8, 0.7));
+    }
+    90% { transform: translateX(5px) translateY(0); }
 }
